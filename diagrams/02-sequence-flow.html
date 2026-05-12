@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC Agent - Entity Investigation Sequence Flow</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; text-align: center; padding: 20px; }
+        h1 { color: #4ecdc4; }
+        .controls { margin: 20px 0; }
+        button { background: #4ecdc4; color: #1a1a2e; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 6px; margin: 5px; }
+        button:hover { background: #45b7d1; }
+        .mermaid { background: #fff; border-radius: 12px; padding: 30px; margin: 20px auto; display: inline-block; }
+        .note { color: #96ceb4; font-size: 14px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Entity Investigation Sequence Flow</h1>
+    <div class="controls">
+        <button onclick="downloadSVG()">Download as SVG</button>
+        <button onclick="downloadPNG()">Download as PNG</button>
+    </div>
+    <div class="mermaid" id="diagram">
+sequenceDiagram
+    participant S as Sentinel Incident
+    participant M as Manager Agent<br/>(AI Foundry)
+    participant GH as GitHub Copilot<br/>Sub-Agent
+    participant MCP as MCP Server
+    participant EXT as External Tool<br/>(Prisma/Cyfirma/Cisco)
+
+    S->>M: Incident triggered (via Webhook/Logic App)<br/>Entities: IP 10.0.0.5, User: jdoe
+    
+    Note over M: Parse entities & determine<br/>which tools to query
+
+    M->>M: Entity Routing Decision:<br/>IP → Sentinel + Cyfirma + Cisco NBAD<br/>User → Sentinel + Prisma CSPM
+
+    par Parallel Fan-out
+        M->>GH: Invoke Sentinel Analyst Agent<br/>(IP: 10.0.0.5, User: jdoe)
+        GH->>MCP: MCP Tool Call: query_sentinel_logs<br/>(entity=10.0.0.5, timerange=24h)
+        MCP->>MCP: Execute KQL via Log Analytics API
+        MCP-->>GH: Results: 3 alerts, 47 events
+        GH-->>M: Sentinel findings JSON
+
+    and
+        M->>GH: Invoke Threat Intel Agent<br/>(IP: 10.0.0.5)
+        GH->>MCP: MCP Tool Call: lookup_cyfirma_ioc<br/>(ioc=10.0.0.5)
+        MCP->>EXT: REST API call to Cyfirma
+        EXT-->>MCP: Threat score: 85/100, APT-linked
+        MCP-->>GH: Cyfirma enrichment
+        GH-->>M: Threat intel findings JSON
+
+    and
+        M->>GH: Invoke Network Security Agent<br/>(IP: 10.0.0.5)
+        GH->>MCP: MCP Tool Call: get_network_anomalies<br/>(ip=10.0.0.5)
+        MCP->>EXT: REST API call to Cisco NBAD
+        EXT-->>MCP: Anomaly detected: data exfil pattern
+        MCP-->>GH: Network findings
+        GH-->>M: Network findings JSON
+    end
+
+    M->>M: Aggregate & Correlate all findings
+    M->>M: Generate Triage Verdict:<br/>HIGH severity, recommended escalation
+
+    M-->>S: Update incident with triage report<br/>& recommended actions
+    </div>
+    <p class="note">Open this file in a browser → click Download as SVG/PNG</p>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'SOC-Agent-Sequence-Flow.svg'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadPNG() {
+            const svg = document.querySelector('.mermaid svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width * 2;
+                canvas.height = img.height * 2;
+                ctx.scale(2, 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'SOC-Agent-Sequence-Flow.png'; a.click();
+            };
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+    </script>
+</body>
+</html>

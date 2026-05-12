@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC Agent Architecture - High Level</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; text-align: center; padding: 20px; }
+        h1 { color: #4ecdc4; }
+        .controls { margin: 20px 0; }
+        button { background: #4ecdc4; color: #1a1a2e; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 6px; margin: 5px; }
+        button:hover { background: #45b7d1; }
+        .mermaid { background: #fff; border-radius: 12px; padding: 30px; margin: 20px auto; display: inline-block; }
+        .note { color: #96ceb4; font-size: 14px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>SOC Agent Architecture - High Level</h1>
+    <div class="controls">
+        <button onclick="downloadSVG()">Download as SVG</button>
+        <button onclick="downloadPNG()">Download as PNG</button>
+    </div>
+    <div class="mermaid" id="diagram">
+graph TB
+    subgraph INCIDENT["🔴 Microsoft Sentinel Incident"]
+        ENT["Entities: IP, User, Host,<br/>URL, FileHash, CloudResource"]
+    end
+
+    subgraph MANAGER["🧠 Manager Agent<br/>(Azure AI Foundry Agent Service)"]
+        ROUTER["Entity Router &<br/>Orchestration Logic"]
+        AGG["Result Aggregator<br/>& Triage Engine"]
+    end
+
+    subgraph SUBAGENTS["🤖 Sub-Agents (GitHub Copilot + MCP)"]
+        SA1["Sentinel<br/>Analyst Agent"]
+        SA2["Cloud Security<br/>Agent"]
+        SA3["Threat Intel<br/>Agent"]
+        SA4["Network Security<br/>Agent"]
+        SA5["EDR<br/>Agent"]
+    end
+
+    subgraph MCPSERVERS["⚙️ MCP Server Layer"]
+        MCP1["Sentinel MCP Server<br/>✅ Community Available"]
+        MCP2["Prisma CSPM MCP Server<br/>🔧 Custom Build Required"]
+        MCP3["Cyfirma MCP Server<br/>🔧 Custom Build Required"]
+        MCP4["Cisco NBAD MCP Server<br/>🔧 Custom Build Required"]
+        MCP5["CrowdStrike MCP Server<br/>✅ Official Available"]
+    end
+
+    subgraph TOOLS["🔌 External Security Tools"]
+        T1["Microsoft Sentinel<br/>Log Analytics API"]
+        T2["Prisma Cloud<br/>CSPM REST API v2"]
+        T3["Cyfirma DeCYFIR<br/>REST API"]
+        T4["Cisco Secure Network<br/>Analytics REST API"]
+        T5["CrowdStrike Falcon<br/>OAuth2 API"]
+    end
+
+    ENT -->|"Webhook / Logic App"| ROUTER
+    ROUTER -->|"Fan-out based on<br/>entity type"| SA1
+    ROUTER -->|"Fan-out"| SA2
+    ROUTER -->|"Fan-out"| SA3
+    ROUTER -->|"Fan-out"| SA4
+    ROUTER -->|"Fan-out"| SA5
+
+    SA1 -->|"MCP Protocol"| MCP1
+    SA2 -->|"MCP Protocol"| MCP2
+    SA3 -->|"MCP Protocol"| MCP3
+    SA4 -->|"MCP Protocol"| MCP4
+    SA5 -->|"MCP Protocol"| MCP5
+
+    MCP1 -->|"REST/KQL"| T1
+    MCP2 -->|"REST API"| T2
+    MCP3 -->|"REST API"| T3
+    MCP4 -->|"REST API"| T4
+    MCP5 -->|"OAuth2 REST"| T5
+
+    SA1 -->|"Results"| AGG
+    SA2 -->|"Results"| AGG
+    SA3 -->|"Results"| AGG
+    SA4 -->|"Results"| AGG
+    SA5 -->|"Results"| AGG
+
+    AGG -->|"Triage Verdict"| OUTPUT["📋 Triage Report<br/>Severity + Recommendations"]
+
+    style INCIDENT fill:#ff6b6b,color:#fff
+    style MANAGER fill:#4ecdc4,color:#fff
+    style SUBAGENTS fill:#45b7d1,color:#fff
+    style MCPSERVERS fill:#96ceb4,color:#000
+    style TOOLS fill:#ffeaa7,color:#000
+    </div>
+    <p class="note">Open this file in a browser → click Download as SVG/PNG</p>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'SOC-Agent-Architecture-HighLevel.svg'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadPNG() {
+            const svg = document.querySelector('.mermaid svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width * 2;
+                canvas.height = img.height * 2;
+                ctx.scale(2, 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'SOC-Agent-Architecture-HighLevel.png'; a.click();
+            };
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+    </script>
+</body>
+</html>

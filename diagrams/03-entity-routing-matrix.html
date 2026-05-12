@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Entity-to-Tool Routing Decision Matrix</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; text-align: center; padding: 20px; }
+        h1 { color: #4ecdc4; }
+        .controls { margin: 20px 0; }
+        button { background: #4ecdc4; color: #1a1a2e; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; border-radius: 6px; margin: 5px; }
+        button:hover { background: #45b7d1; }
+        .mermaid { background: #fff; border-radius: 12px; padding: 30px; margin: 20px auto; display: inline-block; }
+        .note { color: #96ceb4; font-size: 14px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Entity-to-Tool Routing Decision Matrix</h1>
+    <div class="controls">
+        <button onclick="downloadSVG()">Download as SVG</button>
+        <button onclick="downloadPNG()">Download as PNG</button>
+    </div>
+    <div class="mermaid" id="diagram">
+graph LR
+    subgraph ROUTING["Manager Agent - Entity Routing Matrix"]
+        direction TB
+        IP["🌐 IP Address"] -->|queries| S1["Sentinel"]
+        IP -->|queries| CYF["Cyfirma"]
+        IP -->|queries| CISCO["Cisco NBAD"]
+        
+        HOST["🖥️ Hostname"] -->|queries| S2["Sentinel"]
+        HOST -->|queries| PRISMA["Prisma CSPM"]
+        HOST -->|queries| CS["CrowdStrike"]
+        
+        USER["👤 User/Account"] -->|queries| S3["Sentinel"]
+        USER -->|queries| PRISMA2["Prisma CSPM"]
+        
+        URL["🔗 URL / Domain"] -->|queries| S4["Sentinel"]
+        URL -->|queries| CYF2["Cyfirma"]
+        
+        HASH["#️⃣ File Hash"] -->|queries| S5["Sentinel"]
+        HASH -->|queries| CYF3["Cyfirma"]
+        HASH -->|queries| CS2["CrowdStrike"]
+        
+        CLOUD["☁️ Cloud Resource"] -->|queries| S6["Sentinel"]
+        CLOUD -->|queries| PRISMA3["Prisma CSPM"]
+    end
+
+    style ROUTING fill:#2c3e50,color:#ecf0f1
+    </div>
+    <p class="note">Open this file in a browser → click Download as SVG/PNG</p>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+        function downloadSVG() {
+            const svg = document.querySelector('.mermaid svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'Entity-Routing-Matrix.svg'; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadPNG() {
+            const svg = document.querySelector('.mermaid svg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width * 2;
+                canvas.height = img.height * 2;
+                ctx.scale(2, 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'Entity-Routing-Matrix.png'; a.click();
+            };
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+    </script>
+</body>
+</html>
