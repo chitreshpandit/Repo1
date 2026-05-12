@@ -352,26 +352,26 @@ Since the customer prefers GitHub Copilot over Security Copilot, here's how GHCP
 
 ## 10. Implementation Roadmap
 
-### Phase 1: Foundation (Weeks 1-3)
+### Phase 1: Foundation (Weeks 1-6)
 - [ ] Set up Azure AI Foundry workspace with Manager Agent
 - [ ] Deploy Sentinel MCP server (community) on Container Apps
 - [ ] Build Manager Agent with entity extraction and Sentinel-only routing
 - [ ] End-to-end test: Incident → Manager → Sentinel Analyst → Triage Report
 
-### Phase 2: External Integrations (Weeks 4-7)
+### Phase 2: External Integrations (Weeks 7-12)
 - [ ] Build custom Prisma CSPM MCP server (Python MCP SDK)
 - [ ] Build custom Cyfirma MCP server
 - [ ] Build custom Cisco NBAD MCP server
 - [ ] Deploy CrowdStrike official AIDR MCP server
 - [ ] Integrate all MCP servers with sub-agents
 
-### Phase 3: Intelligence & Optimization (Weeks 8-10)
+### Phase 3: Intelligence & Optimization (Weeks 12-18)
 - [ ] Implement correlation logic in Manager Agent (cross-tool finding correlation)
 - [ ] Add confidence scoring and severity calculation
 - [ ] Build automated response recommendations
 - [ ] Set up observability dashboard
 
-### Phase 4: Production Hardening (Weeks 11-12)
+### Phase 4: Production Hardening (Weeks 18-24)
 - [ ] Security review (credential management, network isolation)
 - [ ] Load testing and performance tuning
 - [ ] Runbook for operations team
